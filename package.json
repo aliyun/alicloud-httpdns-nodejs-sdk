@@ -1,0 +1,79 @@
+{
+  "name": "httpdns-nodejs-sdk",
+  "version": "1.0.0",
+  "description": "阿里云HTTPDNS Node.js SDK - 通过HTTP/HTTPS协议提供高性能DNS解析服务",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=12.0.0",
+    "npm": ">=6.0.0"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:integration": "jest --testPathPattern=integration",
+    "lint": "eslint 'src/**/*.ts' --ext .ts",
+    "lint:fix": "eslint 'src/**/*.ts' --ext .ts --fix",
+    "format": "prettier --write 'src/**/*.{ts,js,json}'",
+    "format:check": "prettier --check 'src/**/*.{ts,js,json}'",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run build",
+    "docs": "typedoc src/index.ts",
+    "example": "node dist/examples/basic.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run validate && npm run build",
+    "preversion": "npm run validate",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "httpdns",
+    "dns",
+    "aliyun",
+    "alibaba",
+    "sdk",
+    "nodejs",
+    "typescript"
+  ],
+  "author": "Alibaba Cloud",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ali-oss": "^6.23.0",
+    "axios": "^0.27.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "@types/node": "^12.20.55",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "jest": "^26.6.3",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.5.6",
+    "typedoc": "^0.22.18",
+    "typescript": "^4.1.6",
+    "urllib": "^4.8.2"
+  },
+  "files": [
+    "dist/**/*",
+    "!dist/**/__tests__/**",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk/issues"
+  },
+  "homepage": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk"
+}
