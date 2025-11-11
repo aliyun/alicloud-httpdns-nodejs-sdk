@@ -19,6 +19,13 @@ examples/
 ali-oss-httpdns-test/
 alicloud-httpdns-sdk-go/
 
+# Demo 应用（防止套娃循环）
+demo/
+
+# 文档目录
+documents/
+outputs/
+
 # Development directories
 .kiro/
 .vscode/

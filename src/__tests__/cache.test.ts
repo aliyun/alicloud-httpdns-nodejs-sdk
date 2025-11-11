@@ -215,6 +215,70 @@ describe('CacheManager', () => {
       expect(cacheManager.get(key)).toBeNull();
     });
   });
+
+  describe('过期IP功能', () => {
+    it('应该在enableExpiredIP=false时删除过期缓存', done => {
+      const key = 'test-key';
+      const shortTtl = 0.1; // 100ms
+
+      cacheManager.set(key, mockResult, shortTtl);
+      expect(cacheManager.get(key, false)).toEqual(mockResult);
+
+      setTimeout(() => {
+        const result = cacheManager.get(key, false);
+        expect(result).toBeNull();
+        expect(cacheManager.size()).toBe(0);
+        done();
+      }, 150);
+    });
+
+    it('应该在enableExpiredIP=true时返回过期缓存', done => {
+      const key = 'test-key';
+      const shortTtl = 0.1; // 100ms
+
+      cacheManager.set(key, mockResult, shortTtl);
+      expect(cacheManager.get(key, true)).toEqual(mockResult);
+
+      setTimeout(() => {
+        const result = cacheManager.get(key, true);
+        expect(result).toEqual(mockResult);
+        expect(cacheManager.size()).toBe(1); // 缓存未被删除
+        done();
+      }, 150);
+    });
+
+    it('应该正确判断缓存是否过期', done => {
+      const key = 'test-key';
+      const shortTtl = 0.1; // 100ms
+
+      cacheManager.set(key, mockResult, shortTtl);
+      expect(cacheManager.isExpired(key)).toBe(false);
+
+      setTimeout(() => {
+        expect(cacheManager.isExpired(key)).toBe(true);
+        done();
+      }, 150);
+    });
+
+    it('应该在缓存不存在时isExpired返回true', () => {
+      expect(cacheManager.isExpired('non-existent-key')).toBe(true);
+    });
+
+    it('应该在有效缓存时返回缓存而不考虑enableExpiredIP', () => {
+      const key = 'test-key';
+      const longTtl = 300;
+
+      cacheManager.set(key, mockResult, longTtl);
+
+      // enableExpiredIP=false
+      expect(cacheManager.get(key, false)).toEqual(mockResult);
+      expect(cacheManager.size()).toBe(1);
+
+      // enableExpiredIP=true
+      expect(cacheManager.get(key, true)).toEqual(mockResult);
+      expect(cacheManager.size()).toBe(1);
+    });
+  });
 });
 
 describe('generateCacheKey', () => {

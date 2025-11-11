@@ -5,12 +5,8 @@
 ## 📁 目录结构
 
 ### basic-usage/ - 基础使用示例
-- `basic-usage.js` - 基础 API 使用
-- `simplified-api.js` - 简化 API 使用
-- `advanced-features.js` - 高级功能示例
-- `large-batch-example.js` - 批量解析示例
+- `basic-usage.js` - 基础 API 使用（包含所有核心功能）
 - `typescript-example.ts` - TypeScript 示例
-- `custom-dns-lookup.js` - 自定义 DNS lookup
 
 ### network-adapters/ - 网络库集成示例
 - `axios-integration.js` - Axios 集成
@@ -32,11 +28,18 @@ const client = createClient({
 # 基础使用
 node examples/basic-usage/basic-usage.js
 
-# 网络库集成
+# 网络库集成（推荐）
 node examples/network-adapters/axios-integration.js
 node examples/network-adapters/urllib-integration.js
 node examples/network-adapters/oss-integration.js
 ```
+
+## 💡 推荐
+
+**生产环境建议使用 network-adapters 中的集成方式**，这些示例提供了：
+- 完整的错误处理和重试机制
+- 多 IP 自动故障转移
+- 与主流网络库的最佳实践集成
 
 ## ✨ 主要特性
 

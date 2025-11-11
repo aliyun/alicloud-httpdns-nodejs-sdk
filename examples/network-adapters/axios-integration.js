@@ -6,7 +6,7 @@
 
 const axios = require('axios');
 const dns = require('dns');
-const { createClient } = require('../../dist/index.js');
+const { createClient } = require('@alicloud-emas/httpdns');
 
 class AxiosHTTPDNSAdapter {
   constructor(httpdnsConfig = {}) {
@@ -42,7 +42,7 @@ class AxiosHTTPDNSAdapter {
     const result = this.httpdnsClient.getHttpDnsResultForHostSyncNonBlocking(hostname);
     console.log(`📡 [HTTPDNS 响应] result: ${result ? JSON.stringify(result, null, 2) : 'null'}`);
 
-    if (result && result.success) {
+    if (result) {
       const hasIPv4 = result.ipv4 && result.ipv4.length > 0;
       const hasIPv6 = result.ipv6 && result.ipv6.length > 0;
 

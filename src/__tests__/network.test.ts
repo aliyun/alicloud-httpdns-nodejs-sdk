@@ -137,7 +137,7 @@ describe('NetworkManager', () => {
     });
   });
 
-  describe('resolveSingle', () => {
+  describe('resolve', () => {
     beforeEach(async () => {
       // 先设置服务IP
       const mockResponse = {
@@ -153,19 +153,26 @@ describe('NetworkManager', () => {
     test('should resolve single domain', async () => {
       const mockResponse = {
         data: {
-          host: 'example.com',
-          ips: ['1.2.3.4'],
-          ttl: 300,
+          code: 'success',
+          data: {
+            answers: [{
+              dn: 'example.com',
+              v4: {
+                ips: ['1.2.3.4'],
+                ttl: 300,
+              },
+            }],
+          },
         },
       };
 
       mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
 
-      const result = await networkManager.resolveSingle('example.com');
+      const result = await networkManager.resolve('example.com');
 
       expect(result).toEqual(mockResponse.data);
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        'http://192.168.1.1/test-account-id/d?host=example.com&query=4%2C6',
+        'http://192.168.1.1/v2/d?id=test-account-id&dn=example.com&q=4,6',
         {}
       );
     });
@@ -173,18 +180,25 @@ describe('NetworkManager', () => {
     test('should resolve with different query types', async () => {
       const mockResponse = {
         data: {
-          host: 'example.com',
-          ips: ['1.2.3.4'],
-          ttl: 300,
+          code: 'success',
+          data: {
+            answers: [{
+              dn: 'example.com',
+              v4: {
+                ips: ['1.2.3.4'],
+                ttl: 300,
+              },
+            }],
+          },
         },
       };
 
       mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
 
-      await networkManager.resolveSingle('example.com', QueryType.IPv4);
+      await networkManager.resolve('example.com', QueryType.IPv4);
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        'http://192.168.1.1/test-account-id/d?host=example.com&query=4',
+        'http://192.168.1.1/v2/d?id=test-account-id&dn=example.com&q=4',
         {}
       );
     });
@@ -192,24 +206,31 @@ describe('NetworkManager', () => {
     test('should resolve without client IP', async () => {
       const mockResponse = {
         data: {
-          host: 'example.com',
-          ips: ['1.2.3.4'],
-          ttl: 300,
+          code: 'success',
+          data: {
+            answers: [{
+              dn: 'example.com',
+              v4: {
+                ips: ['1.2.3.4'],
+                ttl: 300,
+              },
+            }],
+          },
         },
       };
 
       mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
 
-      await networkManager.resolveSingle('example.com');
+      await networkManager.resolve('example.com');
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        'http://192.168.1.1/test-account-id/d?host=example.com&query=4%2C6',
+        'http://192.168.1.1/v2/d?id=test-account-id&dn=example.com&q=4,6',
         {}
       );
     });
 
     test('should throw error for invalid domain', async () => {
-      await expect(networkManager.resolveSingle('invalid..domain')).rejects.toThrow(
+      await expect(networkManager.resolve('invalid..domain')).rejects.toThrow(
         HTTPDNSError
       );
     });
@@ -222,7 +243,7 @@ describe('NetworkManager', () => {
       const serviceIPManager = networkManager.getServiceIPManager();
       const markIPFailedSpy = jest.spyOn(serviceIPManager, 'markIPFailed');
 
-      await expect(networkManager.resolveSingle('example.com')).rejects.toThrow('NETWORK_ERROR');
+      await expect(networkManager.resolve('example.com')).rejects.toThrow('NETWORK_ERROR');
 
       // IP应该被标记为失败
       expect(markIPFailedSpy).toHaveBeenCalledWith('192.168.1.1');
@@ -259,20 +280,27 @@ describe('NetworkManager', () => {
     test('should make authenticated single resolve request', async () => {
       const mockResponse = {
         data: {
-          host: 'example.com',
-          ips: ['1.2.3.4'],
-          ttl: 300,
+          code: 'success',
+          data: {
+            answers: [{
+              dn: 'example.com',
+              v4: {
+                ips: ['1.2.3.4'],
+                ttl: 300,
+              },
+            }],
+          },
         },
       };
 
       mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
 
-      await authNetworkManager.resolveSingle('example.com');
+      await authNetworkManager.resolve('example.com');
 
       const callUrl = mockAxiosInstance.get.mock.calls[0][0];
-      expect(callUrl).toContain('/sign_d?');
-      expect(callUrl).toContain('host=example.com');
-      expect(callUrl).toContain('t=');
+      expect(callUrl).toContain('/v2/d?');
+      expect(callUrl).toContain('dn=example.com');
+      expect(callUrl).toContain('exp=');
       expect(callUrl).toContain('s=');
     });
 

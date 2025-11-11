@@ -3,7 +3,7 @@
  * 展示重构后的新API使用方式
  */
 
-const { createClient } = require('../../dist/index.js');
+const { createClient } = require('@alicloud-emas/httpdns');
 
 async function basicExample() {
   console.log('=== HTTPDNS SDK 基础使用示例 ===');
@@ -58,7 +58,7 @@ async function basicExample() {
     
     for (const domain of domains) {
       const result = client.getHttpDnsResultForHostSyncNonBlocking(domain);
-      if (result && result.success) {
+      if (result && result.ipv4.length > 0) {
         console.log(`${domain} -> ${result.ipv4.join(',')}`);
       } else {
         console.log(`${domain} -> 缓存未命中`);
@@ -73,11 +73,10 @@ async function basicExample() {
       domain: errorResult.domain,
       ipv4: errorResult.ipv4,
       ipv6: errorResult.ipv6,
-      ttl: errorResult.ttl,
-      success: errorResult.success,
-      source: errorResult.source,
-      timestamp: errorResult.timestamp,
-      error: errorResult.error
+      ipv4Ttl: errorResult.ipv4Ttl,
+      ipv6Ttl: errorResult.ipv6Ttl,
+      ipv4Timestamp: errorResult.ipv4Timestamp,
+      ipv6Timestamp: errorResult.ipv6Timestamp
     });
     
   } catch (error) {

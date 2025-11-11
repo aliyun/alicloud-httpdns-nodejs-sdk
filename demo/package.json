@@ -1,0 +1,102 @@
+{
+  "name": "httpdns-electron-demo",
+  "version": "1.0.0",
+  "description": "HTTPDNS SDK Electron Demo",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "keywords": [],
+  "author": "Alibaba Cloud",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@alicloud-emas/httpdns": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.aliyun.httpdns.demo",
+    "productName": "HTTPDNS Demo",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "node_modules/**/*",
+      "!node_modules/@alicloud-emas/httpdns/demo/**",
+      "!node_modules/@alicloud-emas/httpdns/documents/**",
+      "!node_modules/@alicloud-emas/httpdns/outputs/**",
+      "!node_modules/@alicloud-emas/httpdns/src/**",
+      "!node_modules/@alicloud-emas/httpdns/.git/**",
+      "!node_modules/@alicloud-emas/httpdns/.kiro/**",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/*.d.ts",
+      "!node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null,
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "title": "${productName} ${version}",
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
+  }
+}

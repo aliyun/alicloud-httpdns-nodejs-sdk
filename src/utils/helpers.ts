@@ -5,13 +5,13 @@
 import { QueryType } from '../types';
 
 /**
- * 构建查询参数字符串（兼容Node.js 12+）
+ * 构建查询参数字符串
  */
 export function buildQueryParams(params: Record<string, string>): string {
   const paramPairs: string[] = [];
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null) {
-      paramPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+      paramPairs.push(`${key}=${value}`);
     }
   }
   return paramPairs.join('&');

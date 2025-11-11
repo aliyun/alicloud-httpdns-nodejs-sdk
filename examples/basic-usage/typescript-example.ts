@@ -11,7 +11,7 @@ import {
   HTTPDNSError,
   Logger,
   QueryType
-} from '../../dist/index.js';
+} from '@alicloud-emas/httpdns';
 
 // 自定义日志器实现
 class CustomLogger implements Logger {
@@ -61,10 +61,10 @@ class DNSService {
       this.logger.info(`开始解析域名: ${domain}`);
       const result = await this.client.getHttpDnsResultForHostSync(domain, options);
       
-      if (result.success) {
+      if (result.ipv4.length > 0 || result.ipv6.length > 0) {
         this.logger.info(`解析成功: ${domain} -> ${result.ipv4.join(', ')}`);
       } else {
-        this.logger.warn(`解析失败: ${domain} -> ${result.error?.message}`);
+        this.logger.warn(`解析失败: ${domain} -> 无可用IP`);
       }
       
       return result;
@@ -103,8 +103,8 @@ class DNSService {
     // 使用内置重试机制
     const result = await this.client.getHttpDnsResultForHostSync(domain);
     
-    if (!result.success) {
-      this.logger.warn(`解析失败: ${domain} -> ${result.error?.message}`);
+    if (!result.ipv4.length && !result.ipv6.length) {
+      this.logger.warn(`解析失败: ${domain} -> 无可用IP`);
     }
     
     return result;
@@ -155,8 +155,8 @@ class DNSCache {
     console.log(`缓存未命中，解析: ${domain}`);
     const result = await dnsService.resolveDomain(domain);
 
-    // 使用TTL作为缓存过期时间，最少缓存30秒
-    const ttlMs = Math.max(result.ttl * 1000, 30000);
+    // 使用IPv4 TTL作为缓存过期时间，最少缓存30秒
+    const ttlMs = Math.max(result.ipv4Ttl * 1000, 30000);
     const expiry = Date.now() + ttlMs;
     
     this.cache.set(cacheKey, { result, expiry });
@@ -234,7 +234,7 @@ class HTTPDNSApp {
       // 测试解析功能
       const result = await this.dnsService.resolveDomain('www.aliyun.com');
       
-      if (result.success) {
+      if (result.ipv4.length > 0 || result.ipv6.length > 0) {
         console.log('健康检查通过');
         return true;
       } else {
@@ -323,7 +323,8 @@ async function typeScriptExample(): Promise<void> {
     
     try {
       const errorResult = await app.resolve('invalid.domain.test');
-      console.log(`错误处理结果: ${errorResult.success ? '解析成功' : '解析失败'} - ${errorResult.error?.message}`);
+      const hasIP = errorResult.ipv4.length > 0 || errorResult.ipv6.length > 0;
+      console.log(`错误处理结果: ${hasIP ? '解析成功' : '解析失败'}`);
     } catch (error) {
       if (error instanceof HTTPDNSError) {
         console.log('捕获到HTTPDNS错误:');

@@ -9,7 +9,7 @@ const urllib = require('urllib');
 const https = require('https');
 const http = require('http');
 const dns = require('dns');
-const { createClient } = require('../../dist/index.js');
+const { createClient } = require('@alicloud-emas/httpdns');
 
 class UrllibHTTPDNSAdapter {
   constructor(httpdnsConfig) {
@@ -33,7 +33,7 @@ class UrllibHTTPDNSAdapter {
     const result = this.httpdnsClient.getHttpDnsResultForHostSyncNonBlocking(hostname);
     console.log(`📡 [HTTPDNS 响应] result: ${result ? JSON.stringify(result, null, 2) : 'null'}`);
 
-    if (result && result.success) {
+    if (result) {
       const hasIPv4 = result.ipv4 && result.ipv4.length > 0;
       const hasIPv6 = result.ipv6 && result.ipv6.length > 0;
 

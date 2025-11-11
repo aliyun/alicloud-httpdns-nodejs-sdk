@@ -41,10 +41,11 @@ export function getDefaultConfig(): Required<
   return {
     bootstrapIPs: DEFAULT_BOOTSTRAP_IPS,
     timeout: 5000, // 5秒超时
-    maxRetries: 0, // 默认不重试，避免频率限制
+    maxRetries: 1, // 默认重试1次，提高解析成功率
     enableHTTPS: false, // 默认HTTP
     httpsSNIHost: DEFAULT_HTTPS_SNI,
     enableCache: true, // 默认启用缓存
+    enableExpiredIP: false, // 默认不允许使用过期IP
   };
 }
 
@@ -104,6 +105,7 @@ export interface MergedConfig extends Omit<HTTPDNSConfig, 'secretKey' | 'logger'
   enableHTTPS: boolean;
   httpsSNIHost: string;
   enableCache: boolean;
+  enableExpiredIP: boolean;
   logger?: Logger;
 }
 
@@ -124,6 +126,10 @@ export function mergeConfig(userConfig: HTTPDNSConfig): MergedConfig {
     httpsSNIHost: userConfig.httpsSNIHost || defaultConfig.httpsSNIHost,
     enableCache:
       userConfig.enableCache !== undefined ? userConfig.enableCache : defaultConfig.enableCache,
+    enableExpiredIP:
+      userConfig.enableExpiredIP !== undefined
+        ? userConfig.enableExpiredIP
+        : defaultConfig.enableExpiredIP,
   };
 
   if (userConfig.secretKey !== undefined) {

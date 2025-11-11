@@ -1,25 +1,25 @@
-# Node.js 基础使用示例
+# 基础使用示例
 
-本目录包含 HTTPDNS Node.js SDK 的基础使用示例，展示核心功能和 API 用法。
+本目录包含 HTTPDNS Node.js SDK 的基础使用示例，快速了解核心 API。
 
-## 文件说明
+## 📁 文件说明
 
-- `basic-usage.js` - 基础 API 使用示例
-- `simplified-api.js` - 简化 API 使用示例  
-- `advanced-features.js` - 高级功能示例
-- `large-batch-example.js` - 批量解析示例
-- `typescript-example.ts` - TypeScript 使用示例
-- `custom-dns-lookup.js` - 自定义 DNS lookup 实现
+- **basic-usage.js** - 基础 API 使用（包含所有核心功能）
+- **typescript-example.ts** - TypeScript 使用示例
 
-## 运行示例
+## 🚀 运行示例
 
 ```bash
-# 基础使用
+# JavaScript 示例
 node examples/basic-usage/basic-usage.js
 
-# 简化 API
-node examples/basic-usage/simplified-api.js
-
-# 高级功能
-node examples/basic-usage/advanced-features.js
+# TypeScript 示例（需要先编译）
+npx ts-node examples/basic-usage/typescript-example.ts
 ```
+
+## 💡 生产环境集成
+
+基础示例仅用于学习 API，**生产环境请参考 `network-adapters/` 目录**，其中包含：
+- Axios 集成（完整的错误处理和重试）
+- urllib 集成（高性能）
+- OSS 集成（对象存储加速）

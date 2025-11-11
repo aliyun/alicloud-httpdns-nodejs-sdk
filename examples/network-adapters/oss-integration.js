@@ -9,7 +9,7 @@
 const OSS = require('ali-oss');
 const https = require('https');
 const dns = require('dns');
-const { createClient } = require('../../dist/index.js');
+const { createClient } = require('@alicloud-emas/httpdns');
 
 class OSSHTTPDNSAdapter {
   constructor(httpdnsConfig) {
@@ -41,7 +41,7 @@ class OSSHTTPDNSAdapter {
           return;
         }
 
-        if (result.success) {
+        if (result) {
           const hasIPv4 = result.ipv4 && result.ipv4.length > 0;
           const hasIPv6 = result.ipv6 && result.ipv6.length > 0;
 

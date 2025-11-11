@@ -15,19 +15,20 @@ export class AuthManager {
   }
 
   /**
-   * 生成单域名解析签名
-   * 签名算法: MD5(host-secret-timestamp)
+   * 生成签名
+   * 签名算法: HMAC-SHA256
    */
-  generateSignature(host: string, timestamp: string): string {
-    return generateSignature(this.secretKey, host, timestamp);
+  generateSignature(signString: string): string {
+    const keyBuffer = Buffer.from(this.secretKey, 'hex');
+    return crypto.createHmac('sha256', keyBuffer).update(signString, 'utf8').digest('hex');
   }
 }
 
 /**
- * 生成单域名解析签名
- * 签名算法: MD5(host-secret-timestamp)
+ * 生成签名
+ * 签名算法: HMAC-SHA256
  */
-export function generateSignature(secretKey: string, host: string, timestamp: string): string {
-  const signString = `${host}-${secretKey}-${timestamp}`;
-  return crypto.createHash('md5').update(signString).digest('hex');
+export function generateSignature(secretKey: string, signString: string): string {
+  const keyBuffer = Buffer.from(secretKey, 'hex');
+  return crypto.createHmac('sha256', keyBuffer).update(signString, 'utf8').digest('hex');
 }

@@ -26,7 +26,7 @@ describe('Integration Tests', () => {
     const mockGet = jest.fn()
       .mockResolvedValueOnce({ data: serviceIPResponse }) // First call for service IPs
       .mockResolvedValue({ data: dnsResponse }); // Subsequent calls for DNS resolution
-    
+
     mockAxios.create.mockReturnValue({
       get: mockGet,
       interceptors: {
@@ -44,7 +44,7 @@ describe('Integration Tests', () => {
     const mockGet = jest.fn()
       .mockResolvedValueOnce({ data: serviceIPResponse }) // First call for service IPs
       .mockRejectedValue(error); // Subsequent calls fail
-    
+
     mockAxios.create.mockReturnValue({
       get: mockGet,
       interceptors: {
@@ -76,9 +76,16 @@ describe('Integration Tests', () => {
       };
 
       const mockDNSResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4', '5.6.7.8'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4', '5.6.7.8'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock network response
@@ -86,7 +93,7 @@ describe('Integration Tests', () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({ data: mockServiceIPResponse }) // First call for service IPs
         .mockResolvedValue({ data: mockDNSResponse }); // Subsequent calls for DNS resolution
-      
+
       mockAxios.create.mockReturnValue({
         get: mockGet,
         interceptors: {
@@ -113,9 +120,16 @@ describe('Integration Tests', () => {
 
     it('应该支持非阻塞解析的完整流程', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -137,15 +151,29 @@ describe('Integration Tests', () => {
 
     it('应该正确处理不同查询类型', async () => {
       const mockIPv4Response = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       const mockIPv6Response = {
-        host: 'example.com',
-        ipsv6: ['2001:db8::1'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v6: {
+              ips: ['2001:db8::1'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock network responses
@@ -190,7 +218,7 @@ describe('Integration Tests', () => {
       setupMockWithError(networkError);
       client = createClient(mockConfig);
       const result = await client.getHttpDnsResultForHostSync('example.com');
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.message).toContain('Network connection failed');
       expect(result.ipv4).toEqual([]);
@@ -215,7 +243,7 @@ describe('Integration Tests', () => {
       setupMockWithError(timeoutError);
       client = createClient(mockConfig);
       const result = await client.getHttpDnsResultForHostSync('example.com', { timeout: 1000 });
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.message).toContain('timeout');
     });
@@ -237,7 +265,7 @@ describe('Integration Tests', () => {
       setupMockWithError(authError);
       client = createClient(mockConfig);
       const result = await client.getHttpDnsResultForHostSync('example.com');
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.message).toContain('Authentication failed');
     });
@@ -274,9 +302,16 @@ describe('Integration Tests', () => {
   describe('并发安全测试', () => {
     it('应该能够处理并发解析请求', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -300,9 +335,16 @@ describe('Integration Tests', () => {
 
     it('应该能够处理并发缓存访问', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       const mockGet = setupMockWithResponses(mockResponse);
@@ -333,9 +375,16 @@ describe('Integration Tests', () => {
   describe('配置项功能测试', () => {
     it('应该在禁用缓存时不使用缓存', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       const mockGet = setupMockWithResponses(mockResponse);
@@ -357,9 +406,16 @@ describe('Integration Tests', () => {
 
     it('应该支持自定义超时配置', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       const mockGet = setupMockWithResponses(mockResponse);
@@ -422,15 +478,29 @@ describe('Integration Tests', () => {
   describe('缓存TTL和过期测试', () => {
     it('应该在缓存过期后重新发起网络请求', async () => {
       const mockResponse1 = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 0.1, // 100ms TTL
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 0.1, // 100ms TTL
+            },
+          }],
+        },
       };
 
       const mockResponse2 = {
-        host: 'example.com',
-        ips: ['5.6.7.8'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['5.6.7.8'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock network responses

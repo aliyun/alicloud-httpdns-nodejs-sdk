@@ -28,14 +28,14 @@ describe('Helpers', () => {
       expect(result).toBe('');
     });
 
-    test('should encode special characters', () => {
+    test('should not encode special characters', () => {
       const params = {
         host: 'test.example.com',
         query: '4,6',
       };
 
       const result = buildQueryParams(params);
-      expect(result).toBe('host=test.example.com&query=4%2C6');
+      expect(result).toBe('host=test.example.com&query=4,6');
     });
 
     test('should skip undefined and null values', () => {

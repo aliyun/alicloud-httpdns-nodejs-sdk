@@ -26,6 +26,13 @@ export class HTTPDNSClientImpl implements HTTPDNSClient {
     // 创建解析器
     this.resolver = new Resolver(this.config);
 
+    // 后台获取服务IP
+    this.resolver.updateServiceIPs().catch(error => {
+      if (this.config.logger) {
+        this.config.logger.warn('Failed to fetch initial service IPs:', error);
+      }
+    });
+
     // 启动定时更新
     this.startPeriodicUpdate();
 
@@ -125,6 +132,20 @@ export class HTTPDNSClientImpl implements HTTPDNSClient {
     }
 
     return true;
+  }
+
+  /**
+   * 预解析域名列表
+   * @param domains 域名列表（最多100个）
+   */
+  setPreResolveHosts(domains: string[]): void {
+    if (this.closed) {
+      if (this.config.logger) {
+        this.config.logger.error('Cannot pre-resolve: client has been stopped');
+      }
+      return;
+    }
+    this.resolver.setPreResolveHosts(domains);
   }
 
   /**

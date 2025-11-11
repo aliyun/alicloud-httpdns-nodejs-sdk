@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build outputs
-# dist/ - removed as it's needed for npm package
+dist/
 build/
 *.tsbuildinfo
 
@@ -58,6 +58,9 @@ documents/
 docs/
 
 # Demo and test projects (not part of SDK)
+demo/node_modules/
+demo/dist/
+demo/package-lock.json
 
 # Kiro IDE files
 .kiro/

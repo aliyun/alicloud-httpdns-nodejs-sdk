@@ -7,7 +7,29 @@ import { HTTPDNSConfig } from '../types';
 import { HTTPDNSError } from '../errors';
 
 // Mock dependencies
-jest.mock('../resolver');
+jest.mock('../resolver', () => {
+  return {
+    Resolver: jest.fn().mockImplementation(() => {
+      return {
+        getHttpDnsResultForHostSync: jest.fn(),
+        getHttpDnsResultForHostSyncNonBlocking: jest.fn(),
+        updateServiceIPs: jest.fn().mockResolvedValue(undefined),
+        getNetworkManager: jest.fn().mockReturnValue({
+          fetchServiceIPs: jest.fn().mockResolvedValue(undefined),
+          getServiceIPManager: jest.fn().mockReturnValue({
+            getServiceIPs: jest.fn().mockReturnValue(['1.2.3.4']),
+            getAvailableServiceIP: jest.fn().mockReturnValue('1.2.3.4'),
+          }),
+          close: jest.fn(),
+        }),
+        getServiceIPs: jest.fn().mockReturnValue(['1.2.3.4']),
+        isHealthy: jest.fn().mockReturnValue(true),
+        setPreResolveHosts: jest.fn(),
+        close: jest.fn(),
+      };
+    }),
+  };
+});
 
 describe('HTTPDNSClient', () => {
   let config: HTTPDNSConfig;
@@ -191,6 +213,66 @@ describe('HTTPDNSClient', () => {
         await client.close(); // Should not throw
 
         expect(client.isHealthy()).toBe(false);
+      });
+    });
+
+    describe('setPreResolveHosts', () => {
+      test('should call resolver setPreResolveHosts', () => {
+        const mockResolver = {
+          setPreResolveHosts: jest.fn(),
+          getHttpDnsResultForHostSync: jest.fn(),
+          getHttpDnsResultForHostSyncNonBlocking: jest.fn(),
+          updateServiceIPs: jest.fn().mockResolvedValue(undefined),
+          getNetworkManager: jest.fn(),
+          close: jest.fn(),
+        };
+        (client as any).resolver = mockResolver;
+
+        const domains = ['example.com', 'test.com'];
+        client.setPreResolveHosts(domains);
+
+        expect(mockResolver.setPreResolveHosts).toHaveBeenCalledWith(domains);
+      });
+
+      test('should log error when client is closed', async () => {
+        // 创建一个新的 client 用于这个测试
+        const mockLogger = {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        
+        const testClient = new HTTPDNSClientImpl({
+          ...config,
+          logger: mockLogger,
+        });
+
+        await testClient.close();
+
+        testClient.setPreResolveHosts(['example.com']);
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Cannot pre-resolve: client has been stopped'
+        );
+      });
+
+      test('should not call resolver when client is closed', async () => {
+        const mockResolver = {
+          setPreResolveHosts: jest.fn(),
+          getHttpDnsResultForHostSync: jest.fn(),
+          getHttpDnsResultForHostSyncNonBlocking: jest.fn(),
+          updateServiceIPs: jest.fn().mockResolvedValue(undefined),
+          getNetworkManager: jest.fn(),
+          close: jest.fn(),
+        };
+        (client as any).resolver = mockResolver;
+
+        await client.close();
+
+        client.setPreResolveHosts(['example.com']);
+
+        expect(mockResolver.setPreResolveHosts).not.toHaveBeenCalled();
       });
     });
   });

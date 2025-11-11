@@ -24,11 +24,12 @@ describe('Resolver Interfaces', () => {
       enableHTTPS: false,
       httpsSNIHost: 'httpdns-api.aliyuncs.com',
       enableCache: true,
+      enableExpiredIP: false,
     };
 
     // Mock NetworkManager
     mockNetworkManager = {
-      resolveSingle: jest.fn(),
+      resolve: jest.fn(),
       close: jest.fn(),
     };
 
@@ -59,21 +60,28 @@ describe('Resolver Interfaces', () => {
       const result = await resolver.getHttpDnsResultForHostSync('example.com');
 
       expect(result).toEqual(mockResult);
-      expect(mockNetworkManager.resolveSingle).not.toHaveBeenCalled();
+      expect(mockNetworkManager.resolve).not.toHaveBeenCalled();
     });
 
     it('应该在缓存未命中时发起网络解析', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       const result = await resolver.getHttpDnsResultForHostSync('example.com');
 
-      expect(mockNetworkManager.resolveSingle).toHaveBeenCalledWith(
+      expect(mockNetworkManager.resolve).toHaveBeenCalledWith(
         'example.com',
         QueryType.Both,
         5000 // Default timeout from config
@@ -85,12 +93,19 @@ describe('Resolver Interfaces', () => {
 
     it('应该在解析成功后更新缓存', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       await resolver.getHttpDnsResultForHostSync('example.com');
 
@@ -105,16 +120,23 @@ describe('Resolver Interfaces', () => {
 
     it('应该支持自定义超时', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       await resolver.getHttpDnsResultForHostSync('example.com', { timeout: 10000 });
 
-      expect(mockNetworkManager.resolveSingle).toHaveBeenCalledWith(
+      expect(mockNetworkManager.resolve).toHaveBeenCalledWith(
         'example.com',
         QueryType.Both,
         10000
@@ -123,16 +145,23 @@ describe('Resolver Interfaces', () => {
 
     it('应该支持不同的查询类型', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       await resolver.getHttpDnsResultForHostSync('example.com', { queryType: QueryType.IPv4 });
 
-      expect(mockNetworkManager.resolveSingle).toHaveBeenCalledWith(
+      expect(mockNetworkManager.resolve).toHaveBeenCalledWith(
         'example.com',
         QueryType.IPv4,
         5000 // Default timeout from config
@@ -141,7 +170,7 @@ describe('Resolver Interfaces', () => {
 
     it('应该在网络解析失败时返回失败结果', async () => {
       const networkError = new Error('Network failed');
-      mockNetworkManager.resolveSingle.mockRejectedValue(networkError);
+      mockNetworkManager.resolve.mockRejectedValue(networkError);
 
       const result = await resolver.getHttpDnsResultForHostSync('example.com');
 
@@ -171,17 +200,24 @@ describe('Resolver Interfaces', () => {
       const result = resolver.getHttpDnsResultForHostSyncNonBlocking('example.com');
 
       expect(result).toEqual(mockResult);
-      expect(mockNetworkManager.resolveSingle).not.toHaveBeenCalled();
+      expect(mockNetworkManager.resolve).not.toHaveBeenCalled();
     });
 
     it('应该在缓存未命中时返回null并异步发起解析', (done) => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       const result = resolver.getHttpDnsResultForHostSyncNonBlocking('example.com');
 
@@ -189,7 +225,7 @@ describe('Resolver Interfaces', () => {
 
       // Wait for async resolution to complete
       setTimeout(() => {
-        expect(mockNetworkManager.resolveSingle).toHaveBeenCalledWith(
+        expect(mockNetworkManager.resolve).toHaveBeenCalledWith(
           'example.com',
           QueryType.Both,
           5000 // Default timeout from config
@@ -220,12 +256,19 @@ describe('Resolver Interfaces', () => {
 
       setTimeout(() => {
         const mockNetworkResponse = {
-          host: 'example.com',
-          ips: ['5.6.7.8'], // Different IP
-          ttl: 300,
+          code: 'success',
+          data: {
+            answers: [{
+              dn: 'example.com',
+              v4: {
+                ips: ['5.6.7.8'], // Different IP
+                ttl: 300,
+              },
+            }],
+          },
         };
 
-        mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+        mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
         const result = resolver.getHttpDnsResultForHostSyncNonBlocking('example.com');
         expect(result).toBeNull(); // Cache expired
@@ -261,7 +304,7 @@ describe('Resolver Interfaces', () => {
 
     it('应该在异步解析失败时不影响缓存', (done) => {
       const networkError = new Error('Network failed');
-      mockNetworkManager.resolveSingle.mockRejectedValue(networkError);
+      mockNetworkManager.resolve.mockRejectedValue(networkError);
 
       const result = resolver.getHttpDnsResultForHostSyncNonBlocking('example.com');
       expect(result).toBeNull();
@@ -286,20 +329,27 @@ describe('Resolver Interfaces', () => {
 
     it('应该在禁用缓存时不使用缓存', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       // First call
       await resolver.getHttpDnsResultForHostSync('example.com');
-      expect(mockNetworkManager.resolveSingle).toHaveBeenCalledTimes(1);
+      expect(mockNetworkManager.resolve).toHaveBeenCalledTimes(1);
 
       // Second call should also hit network (no cache)
       await resolver.getHttpDnsResultForHostSync('example.com');
-      expect(mockNetworkManager.resolveSingle).toHaveBeenCalledTimes(2);
+      expect(mockNetworkManager.resolve).toHaveBeenCalledTimes(2);
     });
 
     it('应该在禁用缓存时resolveNonBlocking总是返回null', () => {
@@ -325,7 +375,7 @@ describe('Resolver Interfaces', () => {
   describe('错误处理', () => {
     it('应该在resolveSync中正确处理网络错误', async () => {
       const networkError = new Error('Connection failed');
-      mockNetworkManager.resolveSingle.mockRejectedValue(networkError);
+      mockNetworkManager.resolve.mockRejectedValue(networkError);
 
       const result = await resolver.getHttpDnsResultForHostSync('example.com');
 
@@ -339,7 +389,7 @@ describe('Resolver Interfaces', () => {
 
     it('应该在resolveNonBlocking异步解析失败时不抛出错误', (done) => {
       const networkError = new Error('Connection failed');
-      mockNetworkManager.resolveSingle.mockRejectedValue(networkError);
+      mockNetworkManager.resolve.mockRejectedValue(networkError);
 
       // Should not throw
       const result = resolver.getHttpDnsResultForHostSyncNonBlocking('example.com');
@@ -356,12 +406,19 @@ describe('Resolver Interfaces', () => {
   describe('缓存键生成', () => {
     it('应该为不同查询类型生成不同的缓存键', async () => {
       const mockNetworkResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
-      mockNetworkManager.resolveSingle.mockResolvedValue(mockNetworkResponse);
+      mockNetworkManager.resolve.mockResolvedValue(mockNetworkResponse);
 
       // Resolve with IPv4
       await resolver.getHttpDnsResultForHostSync('example.com', { queryType: QueryType.IPv4 });

@@ -1,38 +1,16 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.0.0]
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-- Initial release of HTTPDNS Node.js SDK
-- Support for single domain resolution
-- Support for batch domain resolution (up to 5 domains per request)
-- Automatic grouping for large batch requests
-- IPv4 and IPv6 resolution support
-- Service IP management and failover
-- Authentication support with MD5 signatures
-- Comprehensive error handling
-- TypeScript support with full type definitions
-- Extensive test coverage
-
-### Features
-- HTTP/HTTPS protocol support
-- Configurable timeout and retry mechanisms
-- Bootstrap IP support for service discovery
-- Async callback interface
-- Client lifecycle management
-- Network condition handling
-- Rate limiting support
-
-## [1.0.0] - TBD
-
-### Added
-- Initial stable release
-- Core HTTPDNS resolution functionality
-- TypeScript definitions
-- Comprehensive documentation
-- Unit and integration tests
+- 支持阿里云 EMAS HTTPDNS 服务的域名解析
+- 提供同步非阻塞、同步阻塞、异步回调三种解析接口
+- 支持 IPv4 和 IPv6 双栈解析
+- 支持鉴权和非鉴权两种模式
+- 智能缓存机制，支持 TTL 管理和过期 IP 使用
+- 服务 IP 自动发现、轮转和故障转移
+- 多 IP 自动故障转移
+- 连接复用和超时控制
+- 请求重试机制
+- 支持预解析域名列表
+- 完整的 TypeScript 类型定义
+- 支持 Node.js 12+

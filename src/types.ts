@@ -20,7 +20,10 @@ export interface HTTPDNSClient {
    * @param options 解析选项（可选）
    * @returns ResolveResult | null 缓存结果或null
    */
-  getHttpDnsResultForHostSyncNonBlocking(domain: string, options?: ResolveOptions): ResolveResult | null;
+  getHttpDnsResultForHostSyncNonBlocking(
+    domain: string,
+    options?: ResolveOptions
+  ): ResolveResult | null;
 
   /**
    * 关闭客户端
@@ -41,6 +44,12 @@ export interface HTTPDNSClient {
    * 检查客户端健康状态
    */
   isHealthy(): boolean;
+
+  /**
+   * 预解析域名列表
+   * @param domains 域名列表（最多100个）
+   */
+  setPreResolveHosts(domains: string[]): void;
 }
 
 /**
@@ -68,6 +77,9 @@ export interface HTTPDNSConfig {
   /** 是否启用缓存 */
   enableCache?: boolean;
 
+  /** 是否允许使用过期IP（默认false） */
+  enableExpiredIP?: boolean;
+
   /** 日志记录器 */
   logger?: Logger;
 }
@@ -80,16 +92,16 @@ export interface ResolveResult {
   domain: string;
   /** IPv4地址列表 */
   ipv4: string[];
+  /** IPv4 TTL（秒） */
+  ipv4Ttl: number;
+  /** IPv4 解析时间戳 */
+  ipv4Timestamp: Date;
   /** IPv6地址列表 */
   ipv6: string[];
-  /** TTL时间（秒） */
-  ttl: number;
-  /** 解析时间戳 */
-  timestamp: Date;
-  /** 解析是否成功 */
-  success: boolean;
-  /** 错误信息 */
-  error?: Error;
+  /** IPv6 TTL（秒） */
+  ipv6Ttl: number;
+  /** IPv6 解析时间戳 */
+  ipv6Timestamp: Date;
 }
 
 /**
@@ -115,13 +127,23 @@ export enum QueryType {
  * HTTPDNS API响应结构
  */
 export interface HTTPDNSResponse {
-  host: string;
-  ips?: string[]; // IPv4地址列表
-  ipsv6?: string[]; // IPv6地址列表
-  ttl: number;
-  origin_ttl?: number; // 原始TTL
-  client_ip?: string; // 客户端IP（批量解析时返回）
-  type?: number; // 1代表IPv4,28代表IPv6（批量解析时返回）
+  code: string; // "success" | "MissingArgument" | "InvalidHost" | ...
+  data: {
+    cip?: string; // 客户端IP
+    answers: Array<{
+      dn: string; // 域名
+      v4?: {
+        ips: string[];
+        ttl: number;
+        no_ip_code?: string;
+      };
+      v6?: {
+        ips: string[];
+        ttl: number;
+        no_ip_code?: string; // "RRNotExist" | "DomainNotExist" | ...
+      };
+    }>;
+  };
 }
 
 /**

@@ -73,9 +73,16 @@ describe('网络条件测试', () => {
 
     it('应该正确处理长超时', async () => {
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -139,9 +146,16 @@ describe('网络条件测试', () => {
   describe('故障转移', () => {
     it('应该能够处理服务器故障转移', async () => {
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -165,9 +179,16 @@ describe('网络条件测试', () => {
       // First call fails, second succeeds
       const networkError = new Error('Network failed');
       const mockResponse = {
-        host: 'aliyun.com',
-        ips: ['8.8.8.8'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'aliyun.com',
+            v4: {
+              ips: ['8.8.8.8'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       const mockAxios = require('axios');
@@ -207,9 +228,16 @@ describe('网络条件测试', () => {
   describe('并发压力测试', () => {
     it('应该能够处理高并发请求', async () => {
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -248,9 +276,16 @@ describe('网络条件测试', () => {
       });
 
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock successful response
@@ -280,9 +315,16 @@ describe('网络条件测试', () => {
   describe('协议兼容性', () => {
     it('应该支持HTTP协议', async () => {
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -301,9 +343,16 @@ describe('网络条件测试', () => {
 
     it('应该支持HTTPS协议', async () => {
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       setupMockWithResponses(mockResponse);
@@ -331,9 +380,16 @@ describe('网络条件测试', () => {
       });
 
       const mockResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock successful response

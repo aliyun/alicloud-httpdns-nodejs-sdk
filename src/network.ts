@@ -25,6 +25,8 @@ export class NetworkManager {
   private readonly authManager?: AuthManager;
   private readonly serviceIPManager: ServiceIPManager;
   private readonly logger?: Logger | undefined;
+  private fetchServiceIPsPromise?: Promise<void>;
+
   constructor(config: MergedConfig) {
     this.config = config;
     this.serviceIPManager = new ServiceIPManager();
@@ -64,12 +66,9 @@ export class NetworkManager {
     this.httpClient.interceptors.request.use(
       requestConfig => {
         if (this.logger) {
-          // 屏蔽敏感信息的URL
-          const sanitizedUrl = this.sanitizeUrl(requestConfig.url || '');
           this.logger.debug('HTTP Request:', {
             method: requestConfig.method,
-            url: sanitizedUrl,
-            // 不记录完整headers，避免泄露敏感信息
+            url: requestConfig.url,
           });
         }
         return requestConfig;
@@ -113,16 +112,53 @@ export class NetworkManager {
    * 获取服务IP列表
    */
   async fetchServiceIPs(): Promise<void> {
-    const protocol = this.config.enableHTTPS ? 'https' : 'http';
-    const bootstrapIPs = this.config.bootstrapIPs;
+    // 如果已有正在进行的请求，直接返回
+    if (this.fetchServiceIPsPromise) {
+      return this.fetchServiceIPsPromise;
+    }
 
-    // 遍历所有启动IP
-    for (const bootstrapIP of bootstrapIPs) {
+    // 创建新的请求Promise
+    this.fetchServiceIPsPromise = (async () => {
+      const protocol = 'https';
+      const bootstrapIPs = this.config.bootstrapIPs;
+
+      // 遍历所有启动IP
+      for (const bootstrapIP of bootstrapIPs) {
+        try {
+          const url = `${protocol}://${bootstrapIP}/${this.config.accountId}/ss?region=global`;
+
+          if (this.logger) {
+            this.logger.debug(`Fetching service IPs from: ${url}`);
+          }
+
+          const response: AxiosResponse<ServiceIPResponse> = await this.httpClient.get(url);
+
+          if (response.data && response.data.service_ip && response.data.service_ip.length > 0) {
+            this.serviceIPManager.updateServiceIPs(response.data.service_ip);
+
+            if (this.logger) {
+              this.logger.info(
+                `Successfully fetched ${response.data.service_ip.length} service IPs`
+              );
+            }
+
+            return;
+          }
+        } catch (error) {
+          if (this.logger) {
+            this.logger.warn(`Failed to fetch service IPs from ${bootstrapIP}:`, error);
+          }
+          // 继续尝试下一个启动IP
+          continue;
+        }
+      }
+
+      // 如果所有启动IP都失败，尝试使用启动域名
       try {
-        const url = `${protocol}://${bootstrapIP}/${this.config.accountId}/ss?region=global`;
+        const url = `${protocol}://${DEFAULT_BOOTSTRAP_DOMAIN}/${this.config.accountId}/ss?region=global`;
 
         if (this.logger) {
-          this.logger.debug(`Fetching service IPs from: ${url}`);
+          this.logger.debug(`Fetching service IPs from bootstrap domain: ${url}`);
         }
 
         const response: AxiosResponse<ServiceIPResponse> = await this.httpClient.get(url);
@@ -131,61 +167,42 @@ export class NetworkManager {
           this.serviceIPManager.updateServiceIPs(response.data.service_ip);
 
           if (this.logger) {
-            this.logger.info(`Successfully fetched ${response.data.service_ip.length} service IPs`);
+            this.logger.info(
+              `Successfully fetched ${response.data.service_ip.length} service IPs from bootstrap domain`
+            );
           }
 
           return;
         }
       } catch (error) {
         if (this.logger) {
-          this.logger.warn(`Failed to fetch service IPs from ${bootstrapIP}:`, error);
+          this.logger.error('Failed to fetch service IPs from bootstrap domain:', error);
         }
-        // 继续尝试下一个启动IP
-        continue;
-      }
-    }
-
-    // 如果所有启动IP都失败，尝试使用启动域名
-    try {
-      const url = `${protocol}://${DEFAULT_BOOTSTRAP_DOMAIN}/${this.config.accountId}/ss?region=global`;
-
-      if (this.logger) {
-        this.logger.debug(`Fetching service IPs from bootstrap domain: ${url}`);
       }
 
-      const response: AxiosResponse<ServiceIPResponse> = await this.httpClient.get(url);
+      throw createNetworkError('', new Error('Service unavailable'));
+    })().finally(() => {
+      this.fetchServiceIPsPromise = undefined;
+    });
 
-      if (response.data && response.data.service_ip && response.data.service_ip.length > 0) {
-        this.serviceIPManager.updateServiceIPs(response.data.service_ip);
-
-        if (this.logger) {
-          this.logger.info(
-            `Successfully fetched ${response.data.service_ip.length} service IPs from bootstrap domain`
-          );
-        }
-
-        return;
-      }
-    } catch (error) {
-      if (this.logger) {
-        this.logger.error('Failed to fetch service IPs from bootstrap domain:', error);
-      }
-    }
-
-    throw createNetworkError('', new Error('Service unavailable'));
+    return this.fetchServiceIPsPromise;
   }
 
   /**
-   * 单域名解析
+   * 域名解析（支持单个域名或多个域名用逗号分隔）
    */
-  async resolveSingle(
+  async resolve(
     domain: string,
     queryType: QueryType = QueryType.Both,
     timeout?: number
   ): Promise<HTTPDNSResponse> {
-    // 验证域名格式
-    if (!isValidDomain(domain)) {
-      throw createNetworkError(domain, new Error('Invalid domain format'));
+    // 验证域名格式（支持单个域名或逗号分隔的多个域名）
+    const domains = domain.split(',');
+    for (const d of domains) {
+      const trimmedDomain = d.trim();
+      if (!isValidDomain(trimmedDomain)) {
+        throw createNetworkError(domain, new Error('Invalid domain format'));
+      }
     }
 
     return this.executeWithRetry(async (currentServiceIP: string) => {
@@ -208,6 +225,11 @@ export class NetworkManager {
       // 验证响应数据
       if (!response.data || typeof response.data !== 'object') {
         throw createParseError(domain, new Error('Invalid response format'));
+      }
+
+      // 检查响应码
+      if (response.data.code !== 'success') {
+        throw createNetworkError(domain, new Error(`Resolve failed: ${response.data.code}`));
       }
 
       // 标记IP成功
@@ -302,22 +324,23 @@ export class NetworkManager {
     let serviceIP = this.serviceIPManager.getAvailableServiceIP();
 
     if (!serviceIP) {
-      // 如果没有可用的服务IP，尝试获取
-      await this.fetchServiceIPs();
-      serviceIP = this.serviceIPManager.getAvailableServiceIP();
-
-      if (!serviceIP) {
-        // 如果服务IP列表为空，使用启动IP作为备用方案
-        const bootstrapIPs = this.config.bootstrapIPs;
-        if (bootstrapIPs.length > 0) {
-          if (this.logger) {
-            this.logger.warn('No service IPs available, using bootstrap IP as fallback');
-          }
-          return bootstrapIPs[0]!;
+      // 触发后台获取服务IP
+      this.fetchServiceIPs().catch(error => {
+        if (this.logger) {
+          this.logger.warn('Failed to fetch service IPs in background:', error);
         }
+      });
 
-        throw createNetworkError('', new Error('No service IPs available'));
+      // 直接使用 bootstrapIP
+      const bootstrapIPs = this.config.bootstrapIPs;
+      if (bootstrapIPs.length > 0) {
+        if (this.logger) {
+          this.logger.debug('Service IPs not ready, using bootstrap IP as fallback');
+        }
+        return bootstrapIPs[0]!;
       }
+
+      throw createNetworkError('', new Error('No bootstrap IPs available'));
     }
 
     return serviceIP;
@@ -332,30 +355,29 @@ export class NetworkManager {
     queryType: QueryType = QueryType.Both
   ): string {
     const protocol = this.config.enableHTTPS ? 'https' : 'http';
-    const baseURL = `${protocol}://${serviceIP}/${this.config.accountId}`;
+    const baseURL = `${protocol}://${serviceIP}/v2/d`;
+
+    const params: Record<string, string> = {
+      id: this.config.accountId,
+      dn: domain,
+      q: queryType,
+      m: '0', // 加密模式：0=明文, 1=AES-CBC-128, 2=AES-GCM-128
+    };
 
     if (this.authManager) {
       // 鉴权解析
-      const timestamp = generateTimestamp();
-      const signature = this.authManager.generateSignature(domain, timestamp);
+      const exp = Math.floor(Date.now() / 1000) + 300;
+      params.exp = exp.toString();
 
-      const params: Record<string, string> = {
-        host: domain,
-        query: queryType,
-        t: timestamp,
-        s: signature,
-      };
+      // 构建签名串（按 ASCII 升序排序）
+      const sortedKeys = Object.keys(params).sort();
+      const signString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
 
-      return `${baseURL}/sign_d?${buildQueryParams(params)}`;
-    } else {
-      // 非鉴权解析
-      const params: Record<string, string> = {
-        host: domain,
-        query: queryType,
-      };
-
-      return `${baseURL}/d?${buildQueryParams(params)}`;
+      const signature = this.authManager.generateSignature(signString);
+      params.s = signature;
     }
+
+    return `${baseURL}?${buildQueryParams(params)}`;
   }
 
   /**
@@ -408,34 +430,6 @@ export class NetworkManager {
 
     // 其他错误统一处理为网络错误
     return createNetworkError(domain, error);
-  }
-
-  /**
-   * 屏蔽URL中的敏感信息
-   */
-  private sanitizeUrl(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      const params = new URLSearchParams(urlObj.search);
-
-      // 屏蔽签名参数
-      if (params.has('s')) {
-        params.set('s', '[MASKED]');
-      }
-
-      // 屏蔽时间戳参数（可能包含敏感信息）
-      if (params.has('t')) {
-        params.set('t', '[MASKED]');
-      }
-
-      urlObj.search = params.toString();
-      return urlObj.toString();
-    } catch (error) {
-      // 如果URL解析失败，返回屏蔽后的字符串
-      return url
-        .replace(/([?&])s=[^&]*/g, '$1s=[MASKED]')
-        .replace(/([?&])t=[^&]*/g, '$1t=[MASKED]');
-    }
   }
 
   /**

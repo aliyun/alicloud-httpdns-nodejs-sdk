@@ -35,6 +35,7 @@ describe('NetworkManager Retry Mechanism', () => {
       enableHTTPS: false,
       httpsSNIHost: 'httpdns-api.aliyuncs.com',
       enableCache: true,
+      enableExpiredIP: false,
     };
 
     networkManager = new NetworkManager(mockConfig);
@@ -48,9 +49,16 @@ describe('NetworkManager Retry Mechanism', () => {
   describe('成功重试场景', () => {
     it('应该在第一次失败后成功重试', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock axios to fail first, then succeed
@@ -71,7 +79,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      const result = await networkManager.resolveSingle('example.com', QueryType.Both);
+      const result = await networkManager.resolve('example.com', QueryType.Both);
 
       expect(result).toEqual(mockResponse);
       expect(mockGet).toHaveBeenCalledTimes(2);
@@ -81,9 +89,16 @@ describe('NetworkManager Retry Mechanism', () => {
 
     it('应该在多次失败后最终成功', async () => {
       const mockResponse = {
-        host: 'example.com',
-        ips: ['1.2.3.4'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'example.com',
+            v4: {
+              ips: ['1.2.3.4'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock axios to fail twice, then succeed
@@ -107,7 +122,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      const result = await networkManager.resolveSingle('example.com', QueryType.Both);
+      const result = await networkManager.resolve('example.com', QueryType.Both);
 
       expect(result).toEqual(mockResponse);
       expect(mockGet).toHaveBeenCalledTimes(3);
@@ -133,7 +148,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow('Persistent network error');
 
       // Should try maxRetries + 1 times (initial + retries)
@@ -165,7 +180,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow();
 
       // Should log retry attempts
@@ -195,7 +210,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow('Authentication failed');
 
       // Should only try once, no retries
@@ -218,7 +233,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow('Invalid config');
 
       // Should only try once, no retries
@@ -257,7 +272,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow();
 
       // Should mark each IP as failed
@@ -288,7 +303,7 @@ describe('NetworkManager Retry Mechanism', () => {
       };
       (networkManager as any).serviceIPManager = mockServiceIPManager;
 
-      await expect(networkManager.resolveSingle('example.com', QueryType.Both))
+      await expect(networkManager.resolve('example.com', QueryType.Both))
         .rejects.toThrow('Network error');
 
       // Should only try once

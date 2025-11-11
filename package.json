@@ -1,7 +1,7 @@
 {
-  "name": "httpdns-nodejs-sdk",
+  "name": "@alicloud-emas/httpdns",
   "version": "1.0.0",
-  "description": "阿里云HTTPDNS Node.js SDK - 通过HTTP/HTTPS协议提供高性能DNS解析服务",
+  "description": "阿里云EMAS HTTPDNS Node.js SDK - 通过HTTP/HTTPS协议提供高性能DNS解析服务",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
@@ -40,7 +40,7 @@
     "typescript"
   ],
   "author": "Alibaba Cloud",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.27.2"
   },
@@ -64,6 +64,7 @@
   "files": [
     "dist/**/*",
     "!dist/**/__tests__/**",
+    "!dist/.tsbuildinfo",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -75,5 +76,9 @@
   "bugs": {
     "url": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk/issues"
   },
-  "homepage": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk"
+  "homepage": "https://github.com/aliyun/alicloud-httpdns-nodejs-sdk",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }

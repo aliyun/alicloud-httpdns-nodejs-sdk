@@ -2,7 +2,7 @@
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D12.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.1%2B-blue.svg)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 阿里云HTTPDNS Node.js SDK 是一个轻量级的 DNS 解析库，通过 HTTP/HTTPS 协议提供域名解析服务。支持阿里云 EMAS HTTPDNS 服务，为传统 DNS 解析提供更好的性能、安全性和可靠性。
 
@@ -19,7 +19,7 @@
 ## 安装
 
 ```bash
-npm install https://github.com/aliyun/alicloud-httpdns-nodejs-sdk.git
+npm install @alicloud-emas/httpdns
 ```
 
 ## 快速开始
@@ -27,7 +27,7 @@ npm install https://github.com/aliyun/alicloud-httpdns-nodejs-sdk.git
 ### 基础使用
 
 ```typescript
-import { createClient } from 'httpdns-nodejs-sdk';
+import { createClient } from '@alicloud-emas/httpdns';
 
 async function main() {
   // 创建客户端
@@ -41,8 +41,6 @@ async function main() {
     console.log('Domain:', result.domain);
     console.log('IPv4:', result.ipv4);
     console.log('IPv6:', result.ipv6);
-    console.log('TTL:', result.ttl);
-    console.log('Success:', result.success);
   } catch (error) {
     console.error('Resolve failed:', error);
   } finally {
@@ -64,7 +62,7 @@ const client = createClient({
 });
 
 // 方式2: 使用便捷方法createHTTPDNSClient
-import { createHTTPDNSClient } from 'httpdns-nodejs-sdk';
+import { createHTTPDNSClient } from '@alicloud-emas/httpdns';
 
 const client = createHTTPDNSClient('your-account-id', 'your-secret-key');
 ```
@@ -95,7 +93,7 @@ if (cachedResult) {
 ### 完整配置示例
 
 ```typescript
-import { createClient, QueryType } from 'httpdns-nodejs-sdk';
+import { createClient, QueryType } from '@alicloud-emas/httpdns';
 
 const client = createClient({
   // 认证信息
@@ -110,11 +108,32 @@ const client = createClient({
   // 功能开关
   enableHTTPS: false,
   enableCache: true,
-  
-
+  enableExpiredIP: true,  // 允许使用过期的缓存 IP
   
   // 日志配置
   logger: console
+});
+```
+
+### 预解析域名
+
+```typescript
+// 创建客户端后设置预解析域名列表（最多100个）
+const client = createClient({
+  accountId: 'your-account-id'
+});
+
+// 设置预解析列表，SDK 会在后台自动解析这些域名
+client.setPreResolveHosts(['www.aliyun.com']);
+```
+
+### 允许使用过期 IP
+
+```typescript
+// 启用过期 IP 使用
+const client = createClient({
+  accountId: 'your-account-id',
+  enableExpiredIP: true
 });
 ```
 
@@ -155,12 +174,12 @@ await client.updateServiceIPs();
 ## 错误处理
 
 ```typescript
-import { HTTPDNSError } from 'httpdns-nodejs-sdk';
+import { HTTPDNSError } from '@alicloud-emas/httpdns';
 
 try {
   const result = client.getHttpDnsResultForHostSyncNonBlocking('www.aliyun.com');
-  if (!result.success) {
-    console.log('Resolve failed:', result.error?.message);
+  if (!result) {
+    console.log('Resolve failed');
   }
 } catch (error) {
   if (error instanceof HTTPDNSError) {
@@ -219,7 +238,7 @@ npm run validate
 
 ## 许可证
 
-本项目采用 Apache 2.0 许可证。详见 [LICENSE](LICENSE) 文件。
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
 
 ## 贡献
 
@@ -227,9 +246,4 @@ npm run validate
 
 ## 更新日志
 
-### v1.0.0
-- 初始版本发布
-- 支持基础域名解析功能
-- 支持鉴权和非鉴权模式
-- 支持高可用性和故障转移
-- 完整的TypeScript类型定义
+详见 [CHANGELOG.md](CHANGELOG.md)

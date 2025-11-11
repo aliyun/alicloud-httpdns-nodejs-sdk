@@ -19,10 +19,10 @@ describe('Config', () => {
 
       expect(defaultConfig.bootstrapIPs).toEqual(DEFAULT_BOOTSTRAP_IPS);
       expect(defaultConfig.timeout).toBe(5000);
-      expect(defaultConfig.maxRetries).toBe(0);
+      expect(defaultConfig.maxRetries).toBe(1);
       expect(defaultConfig.enableHTTPS).toBe(false);
-
       expect(defaultConfig.httpsSNIHost).toBe(DEFAULT_HTTPS_SNI);
+      expect(defaultConfig.enableExpiredIP).toBe(false);
     });
   });
 
@@ -132,7 +132,7 @@ describe('Config', () => {
       expect(mergedConfig.secretKey).toBe('test-secret-key');
       expect(mergedConfig.timeout).toBe(10000);
       expect(mergedConfig.bootstrapIPs).toEqual(DEFAULT_BOOTSTRAP_IPS);
-      expect(mergedConfig.maxRetries).toBe(0);
+      expect(mergedConfig.maxRetries).toBe(1);
       expect(mergedConfig.enableHTTPS).toBe(false);
       expect(mergedConfig.httpsSNIHost).toBe(DEFAULT_HTTPS_SNI);
       expect(mergedConfig.logger).toBeUndefined();
@@ -165,6 +165,38 @@ describe('Config', () => {
       const mergedConfig = mergeConfig(userConfig);
 
       expect(mergedConfig.logger).toBeUndefined();
+    });
+
+    test('should use default enableExpiredIP when not provided', () => {
+      const userConfig: HTTPDNSConfig = {
+        accountId: 'test-account-id',
+      };
+
+      const mergedConfig = mergeConfig(userConfig);
+
+      expect(mergedConfig.enableExpiredIP).toBe(false);
+    });
+
+    test('should use user enableExpiredIP when provided', () => {
+      const userConfig: HTTPDNSConfig = {
+        accountId: 'test-account-id',
+        enableExpiredIP: true,
+      };
+
+      const mergedConfig = mergeConfig(userConfig);
+
+      expect(mergedConfig.enableExpiredIP).toBe(true);
+    });
+
+    test('should handle enableExpiredIP=false explicitly', () => {
+      const userConfig: HTTPDNSConfig = {
+        accountId: 'test-account-id',
+        enableExpiredIP: false,
+      };
+
+      const mergedConfig = mergeConfig(userConfig);
+
+      expect(mergedConfig.enableExpiredIP).toBe(false);
     });
   });
 });

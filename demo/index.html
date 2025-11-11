@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>HTTPDNS SDK Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: white;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      background: white;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 头部 */
+    .header {
+      padding: 20px 30px 15px;
+      border-bottom: 2px solid #f0f0f0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    /* Tab 导航 */
+    .tabs {
+      display: flex;
+      background: #f8f9fa;
+      border-bottom: 2px solid #e0e0e0;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab:hover {
+      background: #fff;
+      color: #667eea;
+    }
+
+    .tab.active {
+      background: white;
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    /* Tab 内容 */
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 25px 30px;
+      background: #fafafa;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group .hint {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* 复选框组 */
+    .checkbox-group {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      margin: 0;
+      cursor: pointer;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* 单选框组 */
+    .radio-group {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .radio-item input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .radio-item label {
+      margin: 0;
+      cursor: pointer;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* 按钮 */
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #a8a8a8 0%, #7f7f7f 100%);
+    }
+
+    .btn-full {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .button-group button {
+      flex: 1;
+    }
+
+    /* 结果显示 */
+    .result-box {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 250px;
+      max-height: 350px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 20px;
+    }
+
+    .result-box:empty::before {
+      content: '结果将显示在这里...';
+      color: #999;
+      font-style: italic;
+    }
+
+    .loading {
+      text-align: center;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .error {
+      color: #f5576c;
+      font-weight: 600;
+    }
+
+    .success {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    /* 状态指示器 */
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .status-indicator.ready {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-indicator.not-ready {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* 分隔线 */
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 25px 0;
+    }
+
+    /* 滚动条样式 */
+    .tab-content::-webkit-scrollbar,
+    .result-box::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .tab-content::-webkit-scrollbar-track,
+    .result-box::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .tab-content::-webkit-scrollbar-thumb,
+    .result-box::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .tab-content::-webkit-scrollbar-thumb:hover,
+    .result-box::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* 两列布局 */
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <div class="header">
+      <h1>🚀 HTTPDNS SDK Demo</h1>
+    </div>
+
+    <!-- Tab 导航 -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('config')">配置与初始化</button>
+      <button class="tab" onclick="switchTab('test')" id="testTab">功能测试</button>
+    </div>
+
+    <!-- Tab 内容 -->
+    <div class="tab-content">
+      <!-- Tab 1: 配置与初始化 -->
+      <div class="tab-pane active" id="configPane">
+        <h3>SDK 配置</h3>
+
+        <div class="form-group">
+          <label>Account ID *</label>
+          <input type="text" id="accountId" value="" placeholder="输入您的 Account ID">
+        </div>
+
+        <div class="form-group">
+          <label>Secret Key</label>
+          <input type="text" id="secretKey" value="" placeholder="输入您的 Secret Key（可选）">
+          <span class="hint">用于鉴权解析，可选</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>高级配置</h3>
+
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="enableHTTPS">
+            <label for="enableHTTPS">启用 HTTPS</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="enableCache" checked>
+            <label for="enableCache">启用缓存</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="enableExpiredIP" checked>
+            <label for="enableExpiredIP">允许过期 IP</label>
+          </div>
+        </div>
+
+        <div class="two-columns">
+          <div class="form-group">
+            <label>超时时间 (ms)</label>
+            <input type="number" id="timeout" value="5000" min="100" step="100">
+          </div>
+          <div class="form-group">
+            <label>最大重试次数</label>
+            <input type="number" id="maxRetries" value="1" min="0" max="5">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>预解析域名</h3>
+        <div class="form-group">
+          <label>域名列表（每行一个，最多100个）</label>
+          <textarea id="preResolveDomains" placeholder="例如:&#10;www.taobao.com&#10;www.aliyun.com">www.taobao.com
+www.aliyun.com</textarea>
+          <span class="hint">预解析可以提前缓存常用域名，提升首次访问速度</span>
+        </div>
+
+        <button class="btn-primary btn-full" onclick="initializeClient()">
+          初始化 HTTPDNS 客户端
+        </button>
+
+        <div class="result-box" id="configResult"></div>
+      </div>
+
+      <!-- Tab 2: 功能测试 -->
+      <div class="tab-pane" id="testPane">
+        <div class="form-group">
+          <label>域名 *</label>
+          <input type="text" id="domain" value="www.baidu.com" placeholder="例如: www.baidu.com">
+          <span class="hint">不需要输入 http:// 或 https:// 前缀</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>DNS 解析</h3>
+        <div class="form-group">
+          <label>查询类型</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="queryIPv4" name="queryType" value="4">
+              <label for="queryIPv4">仅 IPv4</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="queryIPv6" name="queryType" value="6">
+              <label for="queryIPv6">仅 IPv6</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="queryBoth" name="queryType" value="4,6" checked>
+              <label for="queryBoth">双栈 (IPv4+IPv6)</label>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-success btn-full" onclick="dnsResolve()">
+          执行 DNS 解析
+        </button>
+
+        <div class="divider"></div>
+
+        <h3>HTTP 请求测试</h3>
+        <div class="form-group">
+          <label>请求协议</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="protocolHTTP" name="protocol" value="http" checked>
+              <label for="protocolHTTP">HTTP</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="protocolHTTPS" name="protocol" value="https">
+              <label for="protocolHTTPS">HTTPS</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn-danger" onclick="httpRequest()">
+            使用 HTTPDNS 请求
+          </button>
+          <button class="btn-secondary" onclick="httpRequestSystemDNS()">
+            使用系统 DNS 请求（对照）
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>结果</h3>
+        <div class="result-box" id="testResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let clientInitialized = false;
+
+    // Tab 切换
+    function switchTab(tabName) {
+      // 更新 Tab 按钮状态
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 更新 Tab 内容
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+      });
+      document.getElementById(tabName + 'Pane').classList.add('active');
+    }
+
+    // 初始化客户端
+    async function initializeClient() {
+      const accountId = document.getElementById('accountId').value.trim();
+      if (!accountId) {
+        showConfigResult('请输入 Account ID', 'error');
+        return;
+      }
+
+      const config = {
+        accountId,
+        secretKey: document.getElementById('secretKey').value.trim() || undefined,
+        enableHTTPS: document.getElementById('enableHTTPS').checked,
+        enableCache: document.getElementById('enableCache').checked,
+        enableExpiredIP: document.getElementById('enableExpiredIP').checked,
+        timeout: parseInt(document.getElementById('timeout').value),
+        maxRetries: parseInt(document.getElementById('maxRetries').value),
+      };
+
+      // 预解析域名
+      const preResolveDomains = document.getElementById('preResolveDomains').value
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+
+      showConfigResult('正在初始化客户端...', 'loading');
+
+      try {
+        const result = await window.api.initClient(config, preResolveDomains);
+
+        if (result.success) {
+          clientInitialized = true;
+          const output = formatInitResult(result, config, preResolveDomains);
+          showConfigResult(output, 'success');
+
+          // 启用测试 Tab
+          document.getElementById('testTab').disabled = false;
+        } else {
+          showConfigResult(`初始化失败: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showConfigResult(`错误: ${error.message}`, 'error');
+      }
+    }
+
+    // DNS 解析
+    async function dnsResolve() {
+      if (!clientInitialized) {
+        showTestResult('请先在"配置与初始化"页面初始化客户端', 'error');
+        return;
+      }
+
+      const domain = document.getElementById('domain').value.trim();
+      if (!domain) {
+        showTestResult('请输入域名', 'error');
+        return;
+      }
+
+      const queryType = document.querySelector('input[name="queryType"]:checked').value;
+
+      showTestResult('正在解析 DNS...', 'loading');
+
+      try {
+        const result = await window.api.dnsResolve(domain, queryType);
+
+        if (result.success) {
+          const output = formatDNSResult(result);
+          showTestResult(output, result.result === null ? '' : 'success');
+        } else {
+          showTestResult(`DNS 解析失败: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showTestResult(`错误: ${error.message}`, 'error');
+      }
+    }
+
+    // HTTP 请求（使用 HTTPDNS）
+    async function httpRequest() {
+      if (!clientInitialized) {
+        showTestResult('请先在"配置与初始化"页面初始化客户端', 'error');
+        return;
+      }
+
+      const domain = document.getElementById('domain').value.trim();
+      if (!domain) {
+        showTestResult('请输入域名', 'error');
+        return;
+      }
+
+      const protocol = document.querySelector('input[name="protocol"]:checked').value;
+      const url = `${protocol}://${domain}`;
+
+      showTestResult('正在发送 HTTP 请求（使用 HTTPDNS）...', 'loading');
+
+      try {
+        const result = await window.api.httpRequest(url);
+
+        if (result.success) {
+          const output = formatHTTPResult(result, 'HTTPDNS');
+          showTestResult(output, 'success');
+        } else {
+          showTestResult(`HTTP 请求失败: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showTestResult(`错误: ${error.message}`, 'error');
+      }
+    }
+
+    // HTTP 请求（使用系统 DNS，对照测试）
+    async function httpRequestSystemDNS() {
+      const domain = document.getElementById('domain').value.trim();
+      if (!domain) {
+        showTestResult('请输入域名', 'error');
+        return;
+      }
+
+      const protocol = document.querySelector('input[name="protocol"]:checked').value;
+      const url = `${protocol}://${domain}`;
+
+      showTestResult('正在发送 HTTP 请求（使用系统 DNS）...', 'loading');
+
+      try {
+        const result = await window.api.httpRequestSystemDNS(url);
+
+        if (result.success) {
+          const output = formatHTTPResult(result, '系统 DNS');
+          showTestResult(output, 'success');
+        } else {
+          showTestResult(`HTTP 请求失败: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showTestResult(`错误: ${error.message}`, 'error');
+      }
+    }
+
+    // 格式化初始化结果
+    function formatInitResult(result, config, domains) {
+      const lines = [];
+      lines.push('=== 客户端初始化成功 ===\n');
+      lines.push('配置信息:');
+      lines.push(`  Account ID: ${config.accountId}`);
+      lines.push(`  Secret Key: ${config.secretKey ? '已设置' : '未设置'}`);
+      lines.push(`  启用 HTTPS: ${config.enableHTTPS ? '是' : '否'}`);
+      lines.push(`  启用缓存: ${config.enableCache ? '是' : '否'}`);
+      lines.push(`  允许过期 IP: ${config.enableExpiredIP ? '是' : '否'}`);
+      lines.push(`  超时时间: ${config.timeout}ms`);
+      lines.push(`  最大重试: ${config.maxRetries}次\n`);
+
+      if (domains.length > 0) {
+        lines.push(`预解析域名 (${domains.length}个):`);
+        domains.forEach((domain, index) => {
+          lines.push(`  ${index + 1}. ${domain}`);
+        });
+        lines.push('');
+      }
+
+      lines.push('✅ 客户端已就绪，可以切换到"功能测试"页面进行测试');
+
+      return lines.join('\n');
+    }
+
+    // 格式化 DNS 结果
+    function formatDNSResult(result) {
+      const lines = [];
+      lines.push('=== DNS 解析结果 ===\n');
+      lines.push(`域名: ${result.domain}`);
+      lines.push(`查询类型: ${getQueryTypeName(result.queryType)}`);
+      lines.push(`耗时: ${result.duration}ms`);
+      lines.push(`缓存命中: ${result.fromCache ? '✅ 是' : '❌ 否'}\n`);
+      
+      // 如果 result 为 null，说明缓存未命中
+      if (result.result === null) {
+        lines.push('解析结果: 无缓存');
+        return lines.join('\n');
+      }
+      
+      // 根据查询类型显示对应信息
+      if (result.queryType === '4' || result.queryType === '4,6') {
+        lines.push(`IPv4 TTL: ${result.result.ipv4Ttl}秒`);
+        lines.push(`IPv4 解析时间: ${new Date(result.result.ipv4Timestamp).toLocaleString()}`);
+        lines.push('');
+      }
+      
+      if (result.queryType === '6' || result.queryType === '4,6') {
+        lines.push(`IPv6 TTL: ${result.result.ipv6Ttl}秒`);
+        lines.push(`IPv6 解析时间: ${new Date(result.result.ipv6Timestamp).toLocaleString()}`);
+        lines.push('');
+      }
+
+      // 根据查询类型显示 IPv4 地址
+      if (result.queryType === '4' || result.queryType === '4,6') {
+        if (result.result.ipv4 && result.result.ipv4.length > 0) {
+          lines.push(`IPv4 地址 (${result.result.ipv4.length}个):`);
+          result.result.ipv4.forEach((ip, index) => {
+            lines.push(`  ${index + 1}. ${ip}`);
+          });
+        } else {
+          lines.push(`IPv4 地址: 无`);
+        }
+        lines.push('');
+      }
+
+      // 根据查询类型显示 IPv6 地址
+      if (result.queryType === '6' || result.queryType === '4,6') {
+        if (result.result.ipv6 && result.result.ipv6.length > 0) {
+          lines.push(`IPv6 地址 (${result.result.ipv6.length}个):`);
+          result.result.ipv6.forEach((ip, index) => {
+            lines.push(`  ${index + 1}. ${ip}`);
+          });
+        } else {
+          lines.push(`IPv6 地址: 无`);
+        }
+        lines.push('');
+      }
+
+      if (result.result.error) {
+        lines.push(`错误信息: ${result.result.error.message}`);
+      }
+
+      return lines.join('\n');
+    }
+
+    // 格式化 HTTP 结果
+    function formatHTTPResult(result, dnsType = 'HTTPDNS') {
+      const lines = [];
+      lines.push(`=== HTTP 请求结果 (${dnsType}) ===\n`);
+      lines.push(`状态码: ${result.statusCode} ${result.statusMessage}`);
+      lines.push(`耗时: ${result.duration}ms`);
+      
+      if (dnsType === 'HTTPDNS') {
+        lines.push(`使用 HTTPDNS 缓存: ${result.usedHTTPDNS ? '✅ 是' : '❌ 否'}`);
+        lines.push(`降级到 Local DNS: ${result.fallbackToLocalDNS ? '✅ 是' : '❌ 否'}`);
+        if (result.retriedWithSystemDNS) {
+          lines.push(`⚠️ 首次失败后重试成功（使用系统 DNS）`);
+        }
+      } else {
+        lines.push(`DNS 类型: 系统 DNS（对照测试）`);
+      }
+      
+      if (result.resolvedIP) {
+        lines.push(`解析到的 IP: ${result.resolvedIP}`);
+      }
+      lines.push('');
+
+      lines.push('响应头:');
+      Object.entries(result.headers).forEach(([key, value]) => {
+        lines.push(`  ${key}: ${value}`);
+      });
+
+      lines.push('\n响应体 (前1000字符):');
+      lines.push('─'.repeat(50));
+      lines.push(result.body);
+      lines.push('─'.repeat(50));
+
+      return lines.join('\n');
+    }
+
+    function getQueryTypeName(type) {
+      const map = {
+        '4': '仅 IPv4',
+        '6': '仅 IPv6',
+        '4,6': '双栈 (IPv4+IPv6)'
+      };
+      return map[type] || type;
+    }
+
+    function showConfigResult(text, type = '') {
+      const box = document.getElementById('configResult');
+      box.textContent = text;
+      box.className = `result-box ${type}`;
+    }
+
+    function showTestResult(text, type = '') {
+      const box = document.getElementById('testResult');
+      box.textContent = text;
+      box.className = `result-box ${type}`;
+    }
+  </script>
+</body>
+
+</html>

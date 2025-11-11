@@ -30,9 +30,16 @@ describe('端到端测试', () => {
       };
 
       const mockDNSResponse = {
-        host: 'baidu.com',
-        ips: ['1.2.3.4', '5.6.7.8'],
-        ttl: 300,
+        code: 'success',
+        data: {
+          answers: [{
+            dn: 'baidu.com',
+            v4: {
+              ips: ['1.2.3.4', '5.6.7.8'],
+              ttl: 300,
+            },
+          }],
+        },
       };
 
       // Mock network response
